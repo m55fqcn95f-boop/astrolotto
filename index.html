@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="AstroLotto is an entertainment-based cosmic number picker for lottery-style games." />
+<title>AstroLotto – Cosmic Number Picker</title>
+<style>
+  :root {
+    --bg: #080c13;
+    --panel: #111925;
+    --panel2: #172230;
+    --ink: #eef4ff;
+    --muted: #a8b2c4;
+    --gold: #d7b65d;
+    --gold2: #f2d98b;
+    --teal: #46d4c5;
+    --red: #ff7070;
+    --green: #57d68d;
+    --line: rgba(255,255,255,.12);
+    --shadow: 0 18px 50px rgba(0,0,0,.36);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background:
+      radial-gradient(circle at 10% 10%, rgba(70,212,197,.18), transparent 26%),
+      radial-gradient(circle at 90% 5%, rgba(215,182,93,.15), transparent 25%),
+      linear-gradient(180deg, #070a10 0%, var(--bg) 58%, #05070b 100%);
+    color: var(--ink);
+  }
+  button, input, select, textarea { font: inherit; }
+  button { border: 0; }
+  .wrap { width: min(980px, 100%); margin: 0 auto; padding: 18px; }
+  header {
+    padding: 24px 0 18px;
+    display: grid;
+    gap: 10px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo {
+    width: 48px; height: 48px; border-radius: 16px;
+    background: radial-gradient(circle at 30% 30%, #fff5be, var(--gold) 42%, #6d5420 72%);
+    box-shadow: 0 0 24px rgba(215,182,93,.35);
+    display: grid; place-items: center; color: #0b0d12; font-weight: 900;
+  }
+  h1, h2, h3, p { margin-top: 0; }
+  h1 { font-size: clamp(2rem, 6vw, 4rem); margin-bottom: 0; letter-spacing: -0.05em; line-height: .9; }
+  h2 { color: var(--gold2); font-size: 1.25rem; margin-bottom: 14px; }
+  h3 { color: var(--teal); margin-bottom: 8px; }
+  .tagline { color: var(--muted); max-width: 680px; line-height: 1.5; }
+  .tabs {
+    position: sticky; top: 0; z-index: 5;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+    padding: 10px 0; background: rgba(8,12,19,.88); backdrop-filter: blur(12px);
+  }
+  .tab {
+    padding: 12px 8px; border-radius: 14px; background: var(--panel2); color: var(--muted);
+    border: 1px solid var(--line); cursor: pointer; font-weight: 750;
+  }
+  .tab.active { background: linear-gradient(180deg, rgba(215,182,93,.22), rgba(215,182,93,.09)); color: var(--ink); border-color: rgba(215,182,93,.45); }
+  main { display: grid; gap: 16px; }
+  .grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 16px; align-items: start; }
+  .card {
+    background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018)), var(--panel);
+    border: 1px solid var(--line); border-radius: 22px; padding: 18px; box-shadow: var(--shadow);
+  }
+  .hidden { display: none !important; }
+  .formgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .formgrid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .full { grid-column: 1 / -1; }
+  label { display: block; color: var(--muted); font-size: .88rem; font-weight: 750; margin: 0 0 6px; }
+  input, select, textarea {
+    width: 100%; border-radius: 14px; border: 1px solid rgba(255,255,255,.13); background: #0d1420;
+    color: var(--ink); padding: 12px; outline: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: rgba(70,212,197,.75); box-shadow: 0 0 0 3px rgba(70,212,197,.12); }
+  .checkrow { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; color: var(--muted); }
+  .checkrow input { width: auto; margin-top: 3px; }
+  .btnrow { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+  .btn {
+    width: auto; min-width: 150px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 16px; border-radius: 15px; cursor: pointer; background: var(--gold); color: #0a0d12; font-weight: 900;
+  }
+  .btn.secondary { background: #223246; color: var(--ink); border: 1px solid var(--line); }
+  .btn.ghost { background: transparent; color: var(--teal); border: 1px solid rgba(70,212,197,.35); }
+  .btn.danger { background: #3a1d25; color: #ffd8d8; border: 1px solid rgba(255,112,112,.45); }
+  .btn:disabled { opacity: .48; cursor: not-allowed; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 5px 10px; font-weight: 900; font-size: .78rem; background: rgba(215,182,93,.16); color: var(--gold2); border: 1px solid rgba(215,182,93,.35); }
+  .status { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+  .notice { color: var(--muted); line-height: 1.5; font-size: .95rem; }
+  .warning { padding: 12px; border-radius: 16px; border: 1px solid rgba(255,112,112,.35); background: rgba(255,112,112,.08); color: #ffd6d6; }
+  .success { padding: 12px; border-radius: 16px; border: 1px solid rgba(87,214,141,.35); background: rgba(87,214,141,.08); color: #dfffe9; }
+  .pool { display: flex; flex-wrap: wrap; gap: 9px; margin: 12px 0; }
+  .ball {
+    width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; font-weight: 950;
+    background: radial-gradient(circle at 30% 28%, #ffffff, #d7b65d 45%, #8d6c22 75%); color: #0a0d12;
+    box-shadow: 0 8px 18px rgba(0,0,0,.28); user-select: none;
+  }
+  .ball.small { width: 38px; height: 38px; font-size: .88rem; background: #223246; color: var(--ink); border: 1px solid var(--line); cursor: pointer; }
+  .ball.small.selected { background: var(--teal); color: #04100f; }
+  .ball.supp { background: radial-gradient(circle at 30% 28%, #ffffff, #75dff6 45%, #247a93 75%); }
+  .ball.power { background: radial-gradient(circle at 30% 28%, #ffffff, #ff8484 45%, #a22626 75%); }
+  .resultbar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .gauge { height: 10px; border-radius: 999px; background: #253042; overflow: hidden; margin: 8px 0 2px; }
+  .gauge > div { height: 100%; width: 0%; background: linear-gradient(90deg, var(--teal), var(--gold)); }
+  .history-item { display: grid; gap: 8px; padding: 12px; border-radius: 16px; background: #0d1420; border: 1px solid var(--line); margin-bottom: 10px; }
+  .mini { color: var(--muted); font-size: .84rem; line-height: 1.45; }
+  .hours { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .hour { padding: 10px; border-radius: 14px; background: #0d1420; border: 1px solid var(--line); display: flex; justify-content: space-between; gap: 8px; }
+  .hour.good { border-color: rgba(215,182,93,.45); background: rgba(215,182,93,.08); }
+  .sources { display: grid; gap: 8px; }
+  .source { padding: 10px; border-radius: 14px; background: #0d1420; border: 1px solid var(--line); }
+  footer { color: var(--muted); font-size: .82rem; padding: 22px 0; line-height: 1.45; }
+  @media (max-width: 780px) { .grid, .formgrid, .formgrid.three, .hours { grid-template-columns: 1fr; } .tabs { grid-template-columns: repeat(2, 1fr); } .btn { width: 100%; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><div class="logo">AL</div><span class="badge" id="tierBadge">Free Mode</span></div>
+    <h1>AstroLotto</h1>
+    <p class="tagline">A cosmic-style number picker for entertainment. It generates structured number sets from dates, locations, symbolic astrology patterns, and optional personal birth data. It does not predict lottery outcomes.</p>
+  </header>
+
+  <nav class="tabs" aria-label="App tabs">
+    <button class="tab active" data-tab="generate">Generate</button>
+    <button class="tab" data-tab="timing">Timing</button>
+    <button class="tab" data-tab="history">History</button>
+    <button class="tab" data-tab="premium">Premium</button>
+  </nav>
+
+  <main>
+    <section id="generate" class="tabpage">
+      <div class="grid">
+        <div class="card">
+          <h2>🌌 New Draw</h2>
+          <div class="status"><span class="badge" id="engineBadge">Lite Astro Engine</span><span class="badge" id="gameBadge">Saturday Lotto</span></div>
+          <div class="formgrid">
+            <div>
+              <label for="gameSelect">Game</label>
+              <select id="gameSelect">
+                <option value="saturday">Saturday Lotto — 6/45 + 2 supp</option>
+                <option value="ozlotto">Oz Lotto — 7/47 + 3 supp</option>
+                <option value="powerball">Powerball AU — 7/35 + Powerball 1/20</option>
+                <option value="keno">Keno — Pick 10/80</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+            <div>
+              <label for="drawDateTime">Draw date & time</label>
+              <input id="drawDateTime" type="datetime-local" />
+            </div>
+            <div class="full">
+              <label for="locationInput">Location latitude, longitude</label>
+              <input id="locationInput" value="-27.47, 153.03" placeholder="-27.47, 153.03" />
+            </div>
+          </div>
+
+          <div id="customGame" class="formgrid three hidden" style="margin-top:12px;">
+            <div><label for="customMax">Main max</label><input id="customMax" type="number" value="45" min="1" max="99" /></div>
+            <div><label for="customPick">Pick count</label><input id="customPick" type="number" value="6" min="1" max="20" /></div>
+            <div><label for="customSupp">Supp count</label><input id="customSupp" type="number" value="2" min="0" max="10" /></div>
+          </div>
+
+          <div class="formgrid" style="margin-top:12px;">
+            <div>
+              <label for="modeSelect">Mode</label>
+              <select id="modeSelect">
+                <option value="event">Event only</option>
+                <option value="personal">Personal mode — Premium</option>
+              </select>
+            </div>
+            <div>
+              <label for="styleSelect">Style</label>
+              <select id="styleSelect">
+                <option value="ranked">Hot pick</option>
+                <option value="balanced">Balanced spread</option>
+                <option value="shuffle">Shuffle from top pool</option>
+              </select>
+            </div>
+          </div>
+
+          <label class="checkrow"><input type="checkbox" id="absoluteMap" checked /> <span>Absolute mapping — maps full zodiac positions into the game range.</span></label>
+          <label class="checkrow"><input type="checkbox" id="dateMultiplier" /> <span>Date multiplier — premium boost using draw-day numerics.</span></label>
+
+          <div class="btnrow">
+            <button class="btn" id="generateBtn">Generate Numbers</button>
+            <button class="btn secondary" id="shuffleBtn">Shuffle Again</button>
+          </div>
+          <p class="mini">Use this as a novelty tool. The engine creates consistent symbolic picks; it cannot improve the mathematical odds of a lottery draw.</p>
+        </div>
+
+        <aside class="card" id="resultCard">
+          <h2>Tonight’s Numbers</h2>
+          <div class="mini" id="resultMeta">Generate a set to begin.</div>
+          <div id="mainNumbers" class="pool"></div>
+          <div id="suppNumbers" class="pool"></div>
+          <div class="resultbar"><strong>Luck score:</strong> <span id="luckScore">—</span></div>
+          <div class="gauge"><div id="luckFill"></div></div>
+          <div class="btnrow">
+            <button class="btn secondary" id="saveBtn">Save Set</button>
+            <button class="btn ghost" id="copyBtn">Copy</button>
+          </div>
+          <div id="saveNotice" class="mini"></div>
+        </aside>
+      </div>
+
+      <div class="card">
+        <h2>🔮 Cosmic Pool</h2>
+        <p class="notice">Tap balls to manually choose a ticket from the generated pool.</p>
+        <div id="cosmicPool" class="pool"></div>
+        <div class="btnrow"><button class="btn ghost" id="manualPickBtn">Use Selected</button></div>
+      </div>
+
+      <div class="card">
+        <h2>🪐 Number Sources</h2>
+        <div class="sources" id="sourceList"><p class="mini">Generate numbers to see the strongest sources.</p></div>
+      </div>
+    </section>
+
+    <section id="timing" class="tabpage hidden">
+      <div class="card">
+        <h2>⏳ Best Time to Buy</h2>
+        <div class="formgrid">
+          <div><label for="timingDate">Date</label><input id="timingDate" type="date" /></div>
+          <div><label for="timingLocation">Location latitude, longitude</label><input id="timingLocation" value="-27.47, 153.03" /></div>
+        </div>
+        <div class="btnrow"><button class="btn" id="calcHoursBtn">Show Planetary Hours</button></div>
+        <p class="mini">This uses a lightweight sunrise/sunset estimate and Chaldean planetary-hour sequence. Treat as symbolic timing, not a guarantee.</p>
+        <div class="hours" id="hoursTable"></div>
+      </div>
+    </section>
+
+    <section id="history" class="tabpage hidden">
+      <div class="card">
+        <h2>📊 Saved Sets</h2>
+        <p class="notice" id="historyLimitNotice"></p>
+        <div id="historyList"></div>
+        <div class="btnrow"><button class="btn danger" id="clearHistoryBtn">Clear History</button></div>
+      </div>
+    </section>
+
+    <section id="premium" class="tabpage hidden">
+      <div class="grid">
+        <div class="card">
+          <h2>✨ Premium</h2>
+          <div id="premiumStatusBox" class="warning">Status: Free</div>
+          <p class="notice">Premium unlocks personal birth-data mode, date multiplier, unlimited saved history, and export-ready saved sets.</p>
+          <div class="formgrid">
+            <div><label for="licenseKey">License key</label><input id="licenseKey" placeholder="Paste Gumroad license key" autocomplete="off" /></div>
+            <div><label for="licenseEmail">Buyer email optional</label><input id="licenseEmail" placeholder="email@example.com" autocomplete="email" /></div>
+          </div>
+          <div class="btnrow">
+            <button class="btn" id="activateBtn">Activate Premium</button>
+            <button class="btn secondary" id="buyBtn">Buy Premium</button>
+            <button class="btn ghost" id="logoutBtn">Reset License</button>
+          </div>
+          <p class="mini">Before launch, replace the Worker URL and Gumroad URL in the CONFIG section near the top of this HTML file.</p>
+        </div>
+
+        <div class="card">
+          <h2>👤 Personal Mode Setup</h2>
+          <div class="formgrid">
+            <div><label for="birthDate">Birth date</label><input id="birthDate" type="date" /></div>
+            <div><label for="birthTime">Birth time</label><input id="birthTime" type="time" /></div>
+            <div class="full"><label for="birthLocation">Birth location latitude, longitude</label><input id="birthLocation" value="-27.47, 153.03" /></div>
+          </div>
+          <div class="btnrow"><button class="btn" id="saveNatalBtn">Save Personal Data</button></div>
+          <div id="natalNotice" class="mini"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Responsible-use note: AstroLotto is for entertainment only. Lottery draws are random. Never spend money you cannot afford to lose. This app does not sell tickets, take bets, or claim to predict winning numbers.
+  </footer>
+</div>
+
+<script>
+/*
+  ASTROLOTTO CONFIG — CHANGE THESE BEFORE LAUNCH
+  1) Deploy worker.js to Cloudflare Workers.
+  2) Paste the worker URL below, e.g. https://astrolotto-license.yourname.workers.dev
+  3) Paste your Gumroad product URL below.
+*/
+const CONFIG = {
+  WORKER_VERIFY_URL: 'https://YOUR-WORKER-SUBDOMAIN.workers.dev/verify',
+  GUMROAD_BUY_URL: 'https://YOURUSERNAME.gumroad.com/l/astrolotto-premium',
+  DEMO_KEY_ENABLED: true, // set false before public launch
+  DEMO_KEY: 'AL-DEMO-PRO'
+};
+
+const STORAGE = {
+  license: 'astrolotto_license_v1',
+  premium: 'astrolotto_premium_v1',
+  natal: 'astrolotto_natal_v1',
+  history: 'astrolotto_history_v1'
+};
+
+const GAME_PRESETS = {
+  saturday: { label: 'Saturday Lotto', max: 45, pick: 6, supp: 2, suppMax: 45, suppLabel: 'Supps' },
+  ozlotto: { label: 'Oz Lotto', max: 47, pick: 7, supp: 3, suppMax: 47, suppLabel: 'Supps' },
+  powerball: { label: 'Powerball AU', max: 35, pick: 7, supp: 1, suppMax: 20, suppLabel: 'Powerball', power: true },
+  keno: { label: 'Keno', max: 80, pick: 10, supp: 0, suppMax: 0, suppLabel: '' },
+  custom: { label: 'Custom', max: 45, pick: 6, supp: 2, suppMax: 45, suppLabel: 'Supps' }
+};
+
+const PLANETS = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto'];
+const BENEFICS = ['sun','moon','venus','jupiter'];
+const CHALDEAN = ['saturn','jupiter','mars','sun','venus','mercury','moon'];
+const DAY_RULER = ['sun','moon','mars','mercury','jupiter','venus','saturn'];
+const SIGN_NAMES = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+const RULERS = ['mars','venus','mercury','moon','sun','mercury','venus','mars','jupiter','saturn','saturn','jupiter'];
+
+const state = {
+  premium: false,
+  gameKey: 'saturday',
+  game: {...GAME_PRESETS.saturday},
+  pool: [],
+  main: [],
+  supp: [],
+  chart: null,
+  luck: 0,
+  natal: null,
+  history: []
+};
+
+const $ = (id) => document.getElementById(id);
+
+document.addEventListener('DOMContentLoaded', init);
+
+function init() {
+  setDefaultDates();
+  restoreState();
+  bindEvents();
+  updatePremiumUi();
+  updateGameUi();
+  renderHistory();
+}
+
+function bindEvents() {
+  document.querySelectorAll('.tab').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+  $('gameSelect').addEventListener('change', () => { updateGameUi(); });
+  ['customMax','customPick','customSupp'].forEach(id => $(id).addEventListener('input', updateGameUi));
+  $('generateBtn').addEventListener('click', () => generate(false));
+  $('shuffleBtn').addEventListener('click', () => generate(true));
+  $('saveBtn').addEventListener('click', saveSet);
+  $('copyBtn').addEventListener('click', copySet);
+  $('manualPickBtn').addEventListener('click', manualPick);
+  $('calcHoursBtn').addEventListener('click', renderPlanetaryHours);
+  $('activateBtn').addEventListener('click', activateLicense);
+  $('buyBtn').addEventListener('click', () => window.open(CONFIG.GUMROAD_BUY_URL, '_blank', 'noopener'));
+  $('logoutBtn').addEventListener('click', resetLicense);
+  $('saveNatalBtn').addEventListener('click', saveNatal);
+  $('clearHistoryBtn').addEventListener('click', clearHistory);
+}
+
+function setDefaultDates() {
+  const now = new Date();
+  const sat = new Date(now);
+  const daysUntilSat = (6 - now.getDay() + 7) % 7 || 7;
+  sat.setDate(now.getDate() + daysUntilSat);
+  sat.setHours(20, 30, 0, 0);
+  $('drawDateTime').value = toLocalInputDateTime(sat);
+  $('timingDate').value = sat.toISOString().slice(0, 10);
+}
+
+function restoreState() {
+  try { state.history = JSON.parse(localStorage.getItem(STORAGE.history) || '[]'); } catch { state.history = []; }
+  try { state.natal = JSON.parse(localStorage.getItem(STORAGE.natal) || 'null'); } catch { state.natal = null; }
+  const savedPremium = localStorage.getItem(STORAGE.premium) === 'true';
+  const savedLicense = localStorage.getItem(STORAGE.license) || '';
+  state.premium = savedPremium && !!savedLicense;
+  if (savedLicense) $('licenseKey').value = savedLicense;
+  if (state.natal) $('natalNotice').textContent = 'Personal data saved on this device.';
+}
+
+function switchTab(id) {
+  document.querySelectorAll('.tab').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === id));
+  document.querySelectorAll('.tabpage').forEach(page => page.classList.toggle('hidden', page.id !== id));
+  if (id === 'history') renderHistory();
+}
+
+function updateGameUi() {
+  state.gameKey = $('gameSelect').value;
+  $('customGame').classList.toggle('hidden', state.gameKey !== 'custom');
+  if (state.gameKey === 'custom') {
+    const max = clamp(intVal('customMax', 45), 1, 99);
+    const pick = clamp(intVal('customPick', 6), 1, Math.min(max, 20));
+    const supp = clamp(intVal('customSupp', 2), 0, 10);
+    state.game = { label: 'Custom', max, pick, supp, suppMax: max, suppLabel: 'Supps' };
+  } else {
+    state.game = {...GAME_PRESETS[state.gameKey]};
+  }
+  $('gameBadge').textContent = state.game.label;
+}
+
+function updatePremiumUi() {
+  $('tierBadge').textContent = state.premium ? 'Premium Active' : 'Free Mode';
+  $('premiumStatusBox').className = state.premium ? 'success' : 'warning';
+  $('premiumStatusBox').textContent = state.premium ? 'Status: Premium active on this device' : 'Status: Free';
+  $('dateMultiplier').disabled = !state.premium;
+  $('modeSelect').querySelector('option[value="personal"]').disabled = !state.premium;
+  if (!state.premium && $('modeSelect').value === 'personal') $('modeSelect').value = 'event';
+  $('historyLimitNotice').textContent = state.premium ? 'Premium: unlimited local saved sets.' : 'Free: saves the latest 3 sets only. Premium unlocks unlimited local history.';
+}
+
+function generate(forceShuffle) {
+  updateGameUi();
+  const drawDate = new Date($('drawDateTime').value);
+  if (Number.isNaN(drawDate.getTime())) return alert('Enter a valid draw date and time.');
+  const loc = parseLatLng($('locationInput').value);
+  if (!loc) return alert('Enter location as latitude, longitude. Example: -27.47, 153.03');
+  const mode = $('modeSelect').value;
+  if (mode === 'personal' && !state.premium) return alert('Personal mode is premium.');
+  if (mode === 'personal' && !state.natal) return alert('Save your personal birth data in the Premium tab first.');
+
+  const chart = buildLiteChart(drawDate, loc.lat, loc.lng);
+  state.chart = chart;
+  const pool = [];
+
+  PLANETS.forEach(p => {
+    const body = chart.planets[p];
+    const degNum = zodiacDegreeToNumber(body.degree, state.game.max);
+    const absNum = absoluteToNumber(body.absolute, state.game.max);
+    let weight = BENEFICS.includes(p) ? 5 : 3;
+    if (p === 'jupiter' || p === 'venus') weight += 2;
+    if ([2,5,8,11].includes(body.house)) weight += body.house === 5 ? 4 : 2;
+    addToPool(pool, degNum, weight, `${cap(p)} degree ${body.degree.toFixed(1)}°`);
+    if ($('absoluteMap').checked) addToPool(pool, absNum, weight + 1, `${cap(p)} absolute map`);
+    const shadow = degNum * 2 <= state.game.max ? degNum * 2 : ((degNum * 2 - 1) % state.game.max) + 1;
+    addToPool(pool, shadow, 2, `${cap(p)} shadow`);
+  });
+
+  [chart.asc, chart.mc, chart.houses[2], chart.houses[5], chart.houses[8], chart.houses[11]].forEach((point, index) => {
+    const labels = ['Ascendant', 'Midheaven', '2nd house', '5th house', '8th house', '11th house'];
+    addToPool(pool, zodiacDegreeToNumber(point.degree, state.game.max), index <= 1 ? 6 : 4, labels[index]);
+    addToPool(pool, absoluteToNumber(point.absolute, state.game.max), index <= 1 ? 5 : 3, `${labels[index]} absolute`);
+  });
+
+  [2, 5, 8, 11].forEach(h => addToPool(pool, h, h === 5 ? 5 : 3, `Symbolic house ${h}`));
+
+  const pof = mod360(chart.asc.absolute + chart.planets.moon.absolute - chart.planets.sun.absolute);
+  const lotVictory = mod360(chart.asc.absolute + chart.planets.jupiter.absolute - chart.planets.sun.absolute);
+  const lotFortuneVenus = mod360(chart.asc.absolute + chart.planets.venus.absolute - chart.planets.moon.absolute);
+  [pof, lotVictory, lotFortuneVenus].forEach((lot, i) => {
+    const names = ['Part of Fortune', 'Lot of Victory', 'Venus Fortune Lot'];
+    addToPool(pool, absoluteToNumber(lot, state.game.max), 6 - i, names[i]);
+  });
+
+  if ($('dateMultiplier').checked && state.premium) {
+    const day = drawDate.getDate();
+    PLANETS.slice(0, 7).forEach(p => {
+      const base = zodiacDegreeToNumber(chart.planets[p].degree, state.game.max);
+      const mapped = ((base * day - 1) % state.game.max) + 1;
+      addToPool(pool, mapped, 3, `Date multiplier ${cap(p)}`);
+    });
+  }
+
+  if (mode === 'personal' && state.premium && state.natal) {
+    applyPersonalBoosts(pool, chart, state.natal);
+  }
+
+  state.pool = pool
+    .filter(x => x.num >= 1 && x.num <= state.game.max)
+    .sort((a,b) => b.weight - a.weight || a.num - b.num);
+
+  selectNumbers(forceShuffle);
+  renderAll();
+}
+
+function buildLiteChart(date, lat, lng) {
+  const jd = julianDay(date);
+  const d = jd - 2451545.0;
+  const planets = {
+    sun: planetFromCycle(d, 280.46646, 365.256, lat, lng, 0),
+    moon: planetFromCycle(d, 218.316, 27.32158, lat, lng, 13.2),
+    mercury: planetFromCycle(d, 252.25, 87.969, lat, lng, 4),
+    venus: planetFromCycle(d, 181.98, 224.701, lat, lng, 6),
+    mars: planetFromCycle(d, 355.43, 686.98, lat, lng, 9),
+    jupiter: planetFromCycle(d, 34.35, 4332.59, lat, lng, 12),
+    saturn: planetFromCycle(d, 50.08, 10759.22, lat, lng, 15),
+    uranus: planetFromCycle(d, 314.05, 30685.4, lat, lng, 18),
+    neptune: planetFromCycle(d, 304.35, 60190, lat, lng, 21),
+    pluto: planetFromCycle(d, 238.95, 90560, lat, lng, 24)
+  };
+  // A lightweight ascendant estimate using local sidereal time.
+  const lst = mod360(280.46061837 + 360.98564736629 * d + lng);
+  const ascAbs = mod360(lst + 90 + lat * 0.25);
+  const mcAbs = mod360(lst);
+  const houses = {};
+  for (let i = 1; i <= 12; i++) {
+    const abs = mod360(ascAbs + (i - 1) * 30);
+    houses[i] = pointFromAbs(abs);
+  }
+  Object.values(planets).forEach(p => p.house = findEqualHouse(p.absolute, ascAbs));
+  return { jd, asc: pointFromAbs(ascAbs), mc: pointFromAbs(mcAbs), houses, planets };
+}
+
+function planetFromCycle(days, epoch, period, lat, lng, wobble) {
+  let abs = mod360(epoch + (360 / period) * days + Math.sin((days + wobble) / period * Math.PI * 2) * (wobble || 1));
+  return {...pointFromAbs(abs), house: 1};
+}
+
+function pointFromAbs(abs) {
+  const signIndex = Math.floor(abs / 30);
+  return { absolute: abs, degree: abs % 30, signIndex, sign: SIGN_NAMES[signIndex] };
+}
+
+function findEqualHouse(abs, ascAbs) {
+  return Math.floor(mod360(abs - ascAbs) / 30) + 1;
+}
+
+function applyPersonalBoosts(pool, transit, natal) {
+  const personalPoints = [
+    ['Natal Sun', natal.sun], ['Natal Moon', natal.moon], ['Natal Ascendant', natal.asc],
+    ['Natal Jupiter', natal.jupiter], ['Natal Venus', natal.venus], ['Natal 5th House', natal.house5]
+  ];
+  personalPoints.forEach(([label, point], idx) => {
+    addToPool(pool, zodiacDegreeToNumber(point.degree, state.game.max), 7 - Math.min(idx, 4), label);
+    addToPool(pool, absoluteToNumber(point.absolute, state.game.max), 5, `${label} absolute`);
+  });
+
+  const ruler = RULERS[natal.house5.signIndex] || 'mercury';
+  addToPool(pool, zodiacDegreeToNumber(natal[ruler].degree, state.game.max), 7, `Natal 5th ruler ${cap(ruler)}`);
+
+  PLANETS.forEach(tp => {
+    const t = transit.planets[tp];
+    personalPoints.forEach(([label, n]) => {
+      const orb = angularDistance(t.absolute, n.absolute);
+      const aspectHit = [0, 60, 90, 120, 180].some(a => Math.abs(orb - a) <= 3);
+      if (aspectHit) {
+        addToPool(pool, zodiacDegreeToNumber(t.degree, state.game.max), 4, `Transit ${cap(tp)} aspect ${label}`);
+        addToPool(pool, zodiacDegreeToNumber(n.degree, state.game.max), 4, `${label} transit hit`);
+      }
+    });
+  });
+}
+
+function selectNumbers(forceShuffle) {
+  const style = forceShuffle ? 'shuffle' : $('styleSelect').value;
+  const weighted = expandWeightedPool(state.pool);
+  const seed = makeSeed(`${$('drawDateTime').value}|${$('locationInput').value}|${state.gameKey}|${style}|${state.pool.map(p => p.num + ':' + p.weight).join(',')}`);
+  const rand = mulberry32(seed);
+
+  let candidates = [...new Set(state.pool.map(p => p.num))];
+  if (style === 'ranked') {
+    state.main = state.pool.slice(0, state.game.pick).map(x => x.num);
+  } else if (style === 'balanced') {
+    state.main = balancedPick(candidates, state.game.pick, state.game.max, rand);
+  } else {
+    state.main = randomWeightedPick(weighted, state.game.pick, rand);
+  }
+
+  state.main = uniqueFill(state.main, state.game.pick, state.game.max, rand).sort((a,b) => a-b);
+  state.supp = [];
+  if (state.game.supp > 0) {
+    if (state.game.power) {
+      state.supp = uniqueFill([], state.game.supp, state.game.suppMax, rand).sort((a,b) => a-b);
+    } else {
+      const unused = state.pool.filter(x => !state.main.includes(x.num)).map(x => x.num);
+      state.supp = uniqueFill(unused.slice(0, state.game.supp), state.game.supp, state.game.suppMax, rand, new Set(state.main)).sort((a,b) => a-b);
+    }
+  }
+  state.luck = calcLuckScore();
+}
+
+function expandWeightedPool(pool) {
+  const out = [];
+  pool.forEach(entry => {
+    const count = clamp(Math.round(entry.weight), 1, 20);
+    for (let i = 0; i < count; i++) out.push(entry.num);
+  });
+  return out;
+}
+
+function randomWeightedPick(weighted, count, rand) {
+  const picked = [];
+  const available = [...weighted];
+  while (picked.length < count && available.length) {
+    const n = available[Math.floor(rand() * available.length)];
+    if (!picked.includes(n)) picked.push(n);
+    for (let i = available.length - 1; i >= 0; i--) if (available[i] === n) available.splice(i, 1);
+  }
+  return picked;
+}
+
+function balancedPick(candidates, count, max, rand) {
+  const buckets = [[], [], []];
+  candidates.forEach(n => buckets[Math.min(2, Math.floor((n - 1) / max * 3))].push(n));
+  const picked = [];
+  let i = 0;
+  while (picked.length < count && candidates.length) {
+    const b = buckets[i % 3].filter(n => !picked.includes(n));
+    if (b.length) picked.push(b[Math.floor(rand() * b.length)]);
+    i++;
+    if (i > 100) break;
+  }
+  return picked;
+}
+
+function uniqueFill(nums, count, max, rand, forbidden = new Set()) {
+  const out = [];
+  nums.forEach(n => { if (n >= 1 && n <= max && !out.includes(n) && !forbidden.has(n)) out.push(n); });
+  while (out.length < count) {
+    const n = Math.floor(rand() * max) + 1;
+    if (!out.includes(n) && !forbidden.has(n)) out.push(n);
+  }
+  return out.slice(0, count);
+}
+
+function calcLuckScore() {
+  let score = 46;
+  if (!state.chart) return score;
+  if (state.chart.planets.jupiter.house === 5) score += 14;
+  if (state.chart.planets.venus.house === 5) score += 12;
+  if ([2,5,8,11].includes(state.chart.planets.moon.house)) score += 8;
+  if (angularDistance(state.chart.planets.venus.absolute, state.chart.planets.jupiter.absolute) <= 8) score += 10;
+  if (state.premium && $('modeSelect').value === 'personal') score += 6;
+  if ($('dateMultiplier').checked && state.premium) score += 4;
+  return clamp(score, 1, 99);
+}
+
+function renderAll() {
+  renderResult();
+  renderCosmicPool();
+  renderSources();
+}
+
+function renderResult() {
+  $('resultMeta').textContent = `${state.game.label} • ${new Date($('drawDateTime').value).toLocaleString()} • ${$('modeSelect').value === 'personal' ? 'Personal' : 'Event'} mode`;
+  $('mainNumbers').innerHTML = state.main.map(n => `<div class="ball">${n}</div>`).join('');
+  $('suppNumbers').innerHTML = state.supp.length ? `<span class="mini" style="align-self:center;">${state.game.suppLabel}:</span>` + state.supp.map(n => `<div class="ball ${state.game.power ? 'power' : 'supp'}">${n}</div>`).join('') : '';
+  $('luckScore').textContent = `${state.luck}%`;
+  $('luckFill').style.width = `${state.luck}%`;
+}
+
+function renderCosmicPool() {
+  $('cosmicPool').innerHTML = state.pool.map(entry => `<button type="button" class="ball small" title="Weight ${entry.weight}: ${escapeHtml(entry.sources.slice(0,5).join(', '))}" data-num="${entry.num}">${entry.num}</button>`).join('');
+  document.querySelectorAll('#cosmicPool .ball').forEach(btn => btn.addEventListener('click', () => btn.classList.toggle('selected')));
+}
+
+function renderSources() {
+  const top = state.pool.slice(0, 10);
+  $('sourceList').innerHTML = top.map(entry => `<div class="source"><strong>${entry.num}</strong> <span class="mini">weight ${entry.weight}</span><br><span class="mini">${escapeHtml(entry.sources.slice(0, 6).join(' • '))}</span></div>`).join('');
+}
+
+function manualPick() {
+  const selected = [...document.querySelectorAll('#cosmicPool .selected')].map(el => Number(el.dataset.num));
+  if (selected.length !== state.game.pick) return alert(`Select exactly ${state.game.pick} main numbers.`);
+  state.main = selected.sort((a,b) => a-b);
+  state.supp = [];
+  state.luck = calcLuckScore();
+  renderResult();
+}
+
+function saveSet() {
+  if (!state.main.length) return alert('Generate numbers first.');
+  const entry = { created: new Date().toISOString(), game: state.game.label, draw: $('drawDateTime').value, main: state.main, supp: state.supp, luck: state.luck, mode: $('modeSelect').value };
+  state.history.unshift(entry);
+  if (!state.premium) state.history = state.history.slice(0, 3);
+  localStorage.setItem(STORAGE.history, JSON.stringify(state.history));
+  $('saveNotice').textContent = state.premium ? 'Saved.' : 'Saved. Free mode keeps the latest 3 sets only.';
+  renderHistory();
+}
+
+function copySet() {
+  if (!state.main.length) return alert('Generate numbers first.');
+  const text = `AstroLotto ${state.game.label}: ${state.main.join(', ')}${state.supp.length ? ' | ' + state.game.suppLabel + ': ' + state.supp.join(', ') : ''}`;
+  navigator.clipboard?.writeText(text).then(() => $('saveNotice').textContent = 'Copied.').catch(() => alert(text));
+}
+
+function renderHistory() {
+  updatePremiumUi();
+  if (!state.history.length) { $('historyList').innerHTML = '<p class="mini">No saved sets yet.</p>'; return; }
+  $('historyList').innerHTML = state.history.map((h, i) => `
+    <div class="history-item">
+      <strong>${escapeHtml(h.game)} — ${escapeHtml(new Date(h.draw).toLocaleString())}</strong>
+      <div>${h.main.map(n => `<span class="ball small selected">${n}</span>`).join(' ')} ${h.supp?.length ? `<span class="mini">${escapeHtml(h.supp.join(', '))}</span>` : ''}</div>
+      <span class="mini">Luck ${h.luck}% • ${escapeHtml(h.mode)} • saved ${new Date(h.created).toLocaleString()}</span>
+      <button class="btn secondary" style="min-width:0;width:max-content;" onclick="deleteHistory(${i})">Delete</button>
+    </div>`).join('');
+}
+
+function deleteHistory(i) {
+  state.history.splice(i, 1);
+  localStorage.setItem(STORAGE.history, JSON.stringify(state.history));
+  renderHistory();
+}
+
+function clearHistory() {
+  if (!confirm('Clear saved sets on this device?')) return;
+  state.history = [];
+  localStorage.removeItem(STORAGE.history);
+  renderHistory();
+}
+
+async function activateLicense() {
+  const key = $('licenseKey').value.trim();
+  const email = $('licenseEmail').value.trim();
+  if (!key) return alert('Enter your license key.');
+
+  if (CONFIG.DEMO_KEY_ENABLED && key === CONFIG.DEMO_KEY) {
+    setPremiumActive(key);
+    return;
+  }
+  if (CONFIG.WORKER_VERIFY_URL.includes('YOUR-WORKER-SUBDOMAIN')) {
+    return alert('Worker URL is not configured yet. Deploy worker.js first, then paste your Worker verify URL into CONFIG.WORKER_VERIFY_URL.');
+  }
+
+  try {
+    const resp = await fetch(CONFIG.WORKER_VERIFY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, email })
+    });
+    const data = await resp.json();
+    if (!resp.ok || !data.valid) throw new Error(data.reason || 'Invalid license');
+    setPremiumActive(key);
+  } catch (err) {
+    alert(`License failed: ${err.message}`);
+  }
+}
+
+function setPremiumActive(key) {
+  state.premium = true;
+  localStorage.setItem(STORAGE.license, key);
+  localStorage.setItem(STORAGE.premium, 'true');
+  updatePremiumUi();
+  alert('Premium activated on this device.');
+}
+
+function resetLicense() {
+  state.premium = false;
+  localStorage.removeItem(STORAGE.license);
+  localStorage.removeItem(STORAGE.premium);
+  updatePremiumUi();
+}
+
+function saveNatal() {
+  if (!state.premium) return alert('Personal mode is premium. Activate premium first.');
+  const date = $('birthDate').value;
+  const time = $('birthTime').value || '12:00';
+  const loc = parseLatLng($('birthLocation').value);
+  if (!date || !loc) return alert('Enter birth date and birth location as latitude, longitude.');
+  const birth = new Date(`${date}T${time}`);
+  const chart = buildLiteChart(birth, loc.lat, loc.lng);
+  state.natal = {
+    created: new Date().toISOString(),
+    sun: chart.planets.sun,
+    moon: chart.planets.moon,
+    venus: chart.planets.venus,
+    jupiter: chart.planets.jupiter,
+    mercury: chart.planets.mercury,
+    mars: chart.planets.mars,
+    saturn: chart.planets.saturn,
+    asc: chart.asc,
+    house5: chart.houses[5]
+  };
+  localStorage.setItem(STORAGE.natal, JSON.stringify(state.natal));
+  $('natalNotice').textContent = `Saved. Sun ${state.natal.sun.degree.toFixed(1)}° ${state.natal.sun.sign}, Moon ${state.natal.moon.degree.toFixed(1)}° ${state.natal.moon.sign}.`;
+}
+
+function renderPlanetaryHours() {
+  const dateValue = $('timingDate').value;
+  const loc = parseLatLng($('timingLocation').value);
+  if (!dateValue || !loc) return alert('Enter date and location.');
+  const date = new Date(`${dateValue}T12:00:00`);
+  const times = estimateSunTimes(date, loc.lat, loc.lng);
+  const dayRuler = DAY_RULER[date.getDay()];
+  let startIndex = CHALDEAN.indexOf(dayRuler);
+  const hours = [];
+  const daylightLength = (times.sunset - times.sunrise) / 12;
+  const nightLength = ((times.sunrise + 24) - times.sunset) / 12;
+  for (let i = 0; i < 12; i++) {
+    hours.push({ start: times.sunrise + daylightLength * i, end: times.sunrise + daylightLength * (i+1), planet: CHALDEAN[(startIndex + i) % 7] });
+  }
+  for (let i = 0; i < 12; i++) {
+    hours.push({ start: times.sunset + nightLength * i, end: times.sunset + nightLength * (i+1), planet: CHALDEAN[(startIndex + 12 + i) % 7] });
+  }
+  $('hoursTable').innerHTML = hours.map(h => {
+    const good = ['jupiter','venus','sun','moon'].includes(h.planet);
+    return `<div class="hour ${good ? 'good' : ''}"><span>${formatHour(h.start)}–${formatHour(h.end)}</span><strong>${cap(h.planet)} ${good ? '✨' : ''}</strong></div>`;
+  }).join('');
+}
+
+function estimateSunTimes(date, lat, lng) {
+  // Lightweight NOAA-style estimate good enough for symbolic planetary hours.
+  const start = new Date(date.getFullYear(), 0, 0);
+  const day = Math.floor((date - start) / 86400000);
+  const decl = -23.44 * Math.cos((2 * Math.PI / 365) * (day + 10));
+  const latRad = lat * Math.PI / 180;
+  const decRad = decl * Math.PI / 180;
+  let h = Math.acos(clamp((Math.sin(-0.833 * Math.PI / 180) - Math.sin(latRad) * Math.sin(decRad)) / (Math.cos(latRad) * Math.cos(decRad)), -1, 1));
+  const daylight = 2 * h * 180 / Math.PI / 15;
+  const tzOffset = -date.getTimezoneOffset() / 60;
+  const solarNoon = 12 + tzOffset - lng / 15;
+  return { sunrise: solarNoon - daylight / 2, sunset: solarNoon + daylight / 2 };
+}
+
+function addToPool(pool, num, weight, source) {
+  num = Math.round(num);
+  if (!Number.isFinite(num) || num < 1 || num > state.game.max) return;
+  const existing = pool.find(x => x.num === num);
+  if (existing) { existing.weight += weight; existing.sources.push(source); }
+  else pool.push({ num, weight, sources: [source] });
+}
+
+function zodiacDegreeToNumber(degree, max) { return clamp(Math.round(degree) || max, 1, max); }
+function absoluteToNumber(abs, max) { return Math.floor(mod360(abs) / 360 * max) + 1; }
+function julianDay(date) { return date.getTime() / 86400000 + 2440587.5; }
+function mod360(n) { return ((n % 360) + 360) % 360; }
+function angularDistance(a, b) { const d = Math.abs(mod360(a - b)); return Math.min(d, 360 - d); }
+function parseLatLng(str) { const [lat, lng] = String(str).split(',').map(s => Number(s.trim())); return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null; }
+function intVal(id, fallback) { const n = parseInt($(id).value, 10); return Number.isFinite(n) ? n : fallback; }
+function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+function toLocalInputDateTime(date) { const z = new Date(date.getTime() - date.getTimezoneOffset() * 60000); return z.toISOString().slice(0,16); }
+function makeSeed(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function mulberry32(a) { return function() { let t = a += 0x6D2B79F5; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function formatHour(h) { h = ((h % 24) + 24) % 24; const hour = Math.floor(h); const minute = Math.round((h - hour) * 60); return `${String(hour).padStart(2,'0')}:${String(minute % 60).padStart(2,'0')}`; }
+function escapeHtml(str) { return String(str).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+</script>
+</body>
+</html>
